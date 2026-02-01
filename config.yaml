@@ -1,0 +1,95 @@
+# Enterprise Document Intelligence Configuration
+
+# LLM Configuration
+llm:
+  model_name: "meta-llama/Meta-Llama-3-8B-Instruct"  # Change to your model
+  # Alternative options:
+  # - "meta-llama/Meta-Llama-3-70B-Instruct"
+  # - Local path to GGUF model for llama-cpp
+  model_type: "huggingface"  # Options: huggingface, ollama, llamacpp
+  device: "auto"  # auto, cuda, cpu
+  max_length: 2048
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  use_4bit_quantization: true  # Reduce memory usage
+  use_8bit_quantization: false
+
+# Embedding Model Configuration
+embeddings:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  # For finance-specific embeddings, consider:
+  # - "BAAI/bge-large-en-v1.5"
+  # - "thenlper/gte-large"
+  device: "auto"
+  batch_size: 32
+  normalize_embeddings: true
+  cache_folder: "./models/embeddings"
+
+# Document Processing
+document_processing:
+  chunk_size: 512  # Characters per chunk
+  chunk_overlap: 50  # Overlap between chunks
+  min_chunk_size: 100  # Minimum chunk size
+  supported_formats:
+    - pdf
+    - txt
+    - docx
+  extract_metadata: true
+  metadata_fields:
+    - filename
+    - page_number
+    - document_type
+    - date
+
+# FAISS Configuration
+faiss:
+  index_type: "IndexFlatL2"  # Options: IndexFlatL2, IndexIVFFlat, IndexHNSWFlat
+  dimension: 384  # Must match embedding dimension
+  # For IVF index:
+  nlist: 100  # Number of clusters
+  nprobe: 10  # Number of clusters to search
+  # Storage
+  index_path: "./outputs/faiss_index/documents.index"
+  metadata_path: "./outputs/faiss_index/metadata.pkl"
+  
+# RAG Pipeline
+rag:
+  retrieval:
+    top_k: 5  # Number of documents to retrieve
+    similarity_threshold: 0.7  # Minimum similarity score
+    rerank: true  # Enable reranking
+  generation:
+    max_new_tokens: 512
+    include_sources: true  # Include source citations
+    system_prompt: |
+      You are a financial document analysis assistant. 
+      Answer questions based on the provided context documents.
+      Be precise, cite sources, and acknowledge if information is not in the context.
+
+# Evaluation
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - retrieval_mrr
+    - retrieval_ndcg
+  output_dir: "./outputs/metrics"
+  baseline_accuracy: 0.68  # For tracking 32% improvement
+  target_accuracy: 0.90
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
+  log_file: "./outputs/logs/app.log"
+  rotation: "10 MB"
+  retention: "30 days"
+
+# Paths
+paths:
+  data_dir: "./data"
+  output_dir: "./outputs"
+  models_dir: "./models"
